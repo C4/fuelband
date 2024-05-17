@@ -1,52 +1,25 @@
-# DNS Setup
+# API Setup
 
-This configures a *very limited* DNS server to route the API requests. This assumes running on Ubuntu 22.04 or similar. 
+This configures a limited API to respond and configure a fuelband device using the orignal desktop software.
 
-## Install DNSMASQ
-
-```sudo apt install dnsmasq```
-
-Reboot if needed.
-
-Next, grab your external IP address.
-```dig +short txt ch whoami.cloudflare @1.0.0.1```
-
-Then edit the dnsmasq config file...
-```sudo vim /etc/dnsmasq.conf```
-
-search and uncomment / add lines and replace your external IP with the one you just grabbed.
+## Install and configure NGINX
 
 ```
-no-resolv
-strict-order
-address=/nike.com/{yourexternalIPaddress}
+sudo apt update
+sudo apt install nginx
 ```
 
-Next, edit the the service to allow for external connections.
-Edit: 
-```/etc/init.d/dnsmasq``` 
-and remove `--local-service` from `DNSMASQ_OPTS`
+Add site config
 
-The systemd-resolved will interfere with running dnsmasq so you need to disable it.
+```sudo cp API/fuel.conf /etc/nginx/sites-available/fuel.conf```
 
+Enable the site
+```sudo ln -s /etc/nginx/sites-available/fuel.conf /etc/nginx/sites-enabled/```
+
+Copy over the certs
 ```
-sudo systemctl stop systemd-resolved 
-sudo systemctl disable systemd-resolved 
-sudo systemctl mask systemd-resolved
-```
-
-Incase you need to undo what you did:
-
-```
-sudo systemctl unmask systemd-resolved 
-sudo systemctl enable systemd-resolved 
-sudo systemctl start systemd-resolved
+sudo cp nginx.crt /etc/ssl/certs/
+sudo cp nginx.key /etc/ssl/private/
 ```
 
-Start dnsmasq
-```systemctl start dnsmasq.service```
-
-Check if it's running
-```systemctl status dnsmasq.service```
-
-The DNS part should be good to go now. You can test by setting your DNS server to the IP address and digging for nike.com
+## Install and configure GUNICORN
